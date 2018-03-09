@@ -14,6 +14,7 @@ int atmo = 0;
 SSD1306  display(0x3c, 4, 15); //for the heltec with the built in oled...SSD1306  display(0x3c, D3, D5); for normal
 int rBoost = 0;
 bool isInverted = false;
+int peakboost = 0;
 
 void setup() {
   pinMode(16, OUTPUT);
@@ -24,7 +25,7 @@ void setup() {
 
   display.init();
 
-  display.flipScreenVertically(); //usb to the left
+  //display.flipScreenVertically(); //usb to the left
   // The ESP is capable of rendering 60fps in 80Mhz mode
   // but that won't give you much time for anything else
   // run it in 160Mhz mode or just set it to 30 fps
@@ -201,26 +202,33 @@ void setup() {
   display.clear();
 }
 
-//TODO: on neg reading do psi to in/Hg and display units
-//TODO: do the smiley face thing
-
 void loop() {
   //I guess this lib XOR's everything because it doesn't seem to flicker with this horribly straightforward code
   //turbo logo
   //get boost value
   int boost = getBoost() - 14;  //1 atmosphere is roughtly 14.6 psi
+  if (boost > peakboost){
+    peakboost = boost;
+  }
+  String Speakboost = String(peakboost);
   String Sboost = String(boost);
   //update boost value print at 90, 10  
   if (boost >=0 ){
-    display.drawString(120, 10, Sboost); 
-    display.drawString(125, 30, "psi");
+    display.drawString(120, 4, Sboost); 
+    display.drawString(125, 24, "psi");
   }
   else {
     Sboost = String(boost * 2);
     //psi to in/Hg
-    display.drawString(115, 10, Sboost); 
-    display.drawString(125, 30, "Hg");
+    display.drawString(126, 4, Sboost); 
+    display.drawString(127, 24, "Hg");
   }
+  //display peak
+  display.setFont(ArialMT_Plain_10);
+  display.drawString(128,53,"max " + Speakboost);
+  display.setFont(ArialMT_Plain_24);
+  
+  
   //select the right xbm for the number
   if ((boost > 16) && (isInverted == false)) {
     display.invertDisplay();
